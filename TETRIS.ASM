@@ -1,3 +1,6 @@
+; all args in stack
+; all returns in stack
+
 .286
 
 .MODEL small
@@ -9,39 +12,61 @@
 
 .CODE
 
-main PROC                 
+InitProgram PROC
+        ; ds must init in exe
         mov ax, @data
         mov ds, ax
 
-read:
-        mov ah, 01h
-        int 16h
+        ret
+InitProgram ENDP
 
-        ; input nothing
-        jz read
+main PROC                 
+        call InitProgram
 
-        mov ah, 00h
-        int 16h
-
-        cmp al, 97
-        ; input 'a'
-        je bye
-
-        mov dl, 0DBh
-        mov ah, 02h
-        int 21h
-
-        loop read
-
-bye:
         mov dx, OFFSET msg
         mov ah, 9
         int 21h
 
-        mov al, 13h
-        int 10h
+        call GraphicModeOn
+
+        call GraphicModeOff
 
         mov ah, 4ch
         int 21h
 main ENDP
-END
+
+; turn on graphic mode by interrupt
+; no args
+; no returns
+GraphicModeOn PROC
+        pusha
+        pushf
+
+        mov ah, 00h
+        mov al, 13h
+        int 10h
+
+        popf
+        popa
+
+        ret
+GraphicModeOn ENDP
+
+; turn off graphic mode by interrupt
+; no args
+; no returns
+GraphicModeOff PROC
+        pusha
+        pushf
+
+        mov ah, 00h
+        mov al, 03h
+        int 10h
+
+        popf
+        popa
+        
+        ret
+GraphicModeOff ENDP
+
+END main
