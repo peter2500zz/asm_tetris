@@ -27,6 +27,9 @@
 
 .CODE
 
+extrn GraphicModeOn:near
+extrn GraphicModeOff:near
+
 main PROC                 
         call InitProgram
 
@@ -34,19 +37,31 @@ main PROC
         mov ah, 9
         int 21h
 
-        mov cx, 8
-        sub bx, bx
-@b:
-        mov ax, 2
-        mul bx
-        mov si, ax
-        sub ax, ax
-        mov ah, 00010000b
-        mov al, 65
-        mov ds:[tetrisPlayground + si], ax
+;         mov cx, 8
+;         sub bx, bx
+; @b:
+;         mov ax, 2
+;         mul bx
+;         mov si, ax
+;         sub ax, ax
+;         mov ah, 00010000b
+;         mov al, 65
+;         mov ds:[tetrisPlayground + si], ax
 
-        inc bx
-        loop @b
+;         inc bx
+;         loop @b
+        mov ah, 00010000b
+        mov al, 101
+        mov ds:[tetrisPlayground + si + 8], ax
+        mov ah, 00010000b
+        mov al, 101
+        mov ds:[tetrisPlayground + si + 10], ax
+        mov ah, 00010000b
+        mov al, 101
+        mov ds:[tetrisPlayground + si + 12], ax
+        mov ah, 00010000b
+        mov al, 101
+        mov ds:[tetrisPlayground + si + 12 + 20], ax
 
         call GraphicModeOn
 
@@ -60,7 +75,7 @@ main PROC
         ; push ax
         ; mov al, 101  ; color
         ; push ax
-        ; call DrawRect
+        ; call FillRect
 
         ; mov ax, 11  ; start x
         ; push ax
@@ -72,7 +87,7 @@ main PROC
         ; push ax
         ; mov al, 65  ; color
         ; push ax
-        ; call DrawRect
+        ; call FillRect
 
 @tick:
         call RenderTetrisPlayground
@@ -99,36 +114,6 @@ InitProgram PROC
         ret
 InitProgram ENDP
 
-; turn on graphic mode by interrupt
-; no args
-; no returns
-GraphicModeOn PROC
-        push ax
-
-        mov ah, 00h
-        mov al, 13h
-        int 10h
-
-        pop ax
-
-        ret
-GraphicModeOn ENDP
-
-; turn off graphic mode by interrupt
-; no args
-; no returns
-GraphicModeOff PROC
-        push ax
-
-        mov ah, 00h
-        mov al, 03h
-        int 10h
-
-        pop ax
-
-        ret
-GraphicModeOff ENDP
-
 ; wait and read a char from input
 ; no args
 ; returns: al=[read char ascii] ah=[scan]
@@ -150,7 +135,7 @@ ReadChar ENDP
 ; stack 14h
 ; args: 8:[start x] 6:[start y] 4:[end x] 2:[end y] 0:[color]
 ; no returns
-DrawRect PROC
+FillRect PROC
         pusha
         pushf
 
@@ -199,7 +184,7 @@ DrawRect PROC
         popa
 
         ret 10
-DrawRect ENDP
+FillRect ENDP
 
 ; render tetris playground
 ; no args
@@ -235,7 +220,7 @@ RenderTetrisPlayground PROC
 
         mov ax, 0Fh  ; color
         push ax
-        call DrawRect
+        call FillRect
 
         dec cx
 
@@ -263,7 +248,7 @@ RenderTetrisPlayground PROC
 
         mov ax, 0  ; color
         push ax
-        call DrawRect
+        call FillRect
 
 
         mov cx, 20
@@ -365,7 +350,7 @@ RenderTetrisPlayground PROC
         push ax
 
         push cx
-        call DrawRect
+        call FillRect
 
         jmp @finish_this_unit_0002
 
