@@ -33,14 +33,14 @@ main PROC
         mov ah, 9
         int 21h
 
-        mov cx, 200
+        mov cx, 8
         sub bx, bx
 @b:
         mov ax, 2
         mul bx
         mov si, ax
         sub ax, ax
-        mov ah, 00001111b
+        mov ah, 00000000b
         mov al, 65
         mov ds:[tetrisPlayground + si], ax
 
@@ -199,6 +199,7 @@ DrawRect ENDP
 ; render tetris playground
 ; no args
 ; no returns
+; tag: 0002
 RenderTetrisPlayground PROC
         pusha
         pushf
@@ -262,109 +263,113 @@ RenderTetrisPlayground PROC
 
         mov cx, 20
         sub bx, bx
-@y1:
+
+        mov cx, 200
+        sub si, si; column
+        sub di, di; row
+        sub bx, bx; unit count
+@render_0002:
         push cx
+        push si
+        push di
         push bx
 
-        ; di: offset in playground
-        mov ax, 10; ax = 10
-        mul bx; result = ax * bx
-        mov di, ax; offset = result
-
-        mov cx, 10
-        sub bx, bx; count = 0
-@x1:
-        push cx
-        push bx
-
-        call RenderTetrisPlaygroundUnit
-
+        jmp @RenderSingleUnit_0002
+@finish_this_unit_0002:
         pop bx
+        pop di
+        pop si
         pop cx
+
         inc bx
-        loop @x1
+        inc si
 
-        pop bx
-        pop cx
-        inc bx
-        loop @y1
+        cmp si, 10
+        jl @column_add_0002
 
+        inc di
+        sub si, si
+@column_add_0002:
+        loop @render_0002
 
-        popf
-        popa
+        jmp @finish_0002
 
-        ret
-
-RenderTetrisPlayground ENDP
-
-; dont call this
-RenderTetrisPlaygroundUnit PROC
-        ; because need word, di += count * 2
+@RenderSingleUnit_0002:
+                ; because need word, di += count * 2
         mov ax, 2
         mul bx
-        add di, ax
 
+        push di
+        mov di, ax
         ; get unit
         mov cx, ds:[di + tetrisPlayground]
+        pop di
+
         ; if is zero, ignore
         test cx, cx
-        jz @finish1
+        jz @finish_this_unit_0002
 
         ; get stack
         mov bp, sp
 
         ; tetrisPlaygroundStartX + bx * tetrisPlaygroundUnitSize
         ; start x
-        mov ax, ss:[bp + 2]
+        mov ax, si
         mov bx, ds:[tetrisPlaygroundUnitSize]
         mul bx
         add ax, ds:[tetrisPlaygroundStartX]
         test ch, 00000100b; pos 2 is left
-        jne @left_no_need_change
+        jne @left_no_need_change_0002
         inc ax
-@left_no_need_change:
+@left_no_need_change_0002:
         push ax
 
         ; start y
-        mov ax, ss:[bp + 4 + 2]
+        mov ax, di
         mov bx, ds:[tetrisPlaygroundUnitSize]
         mul bx
         add ax, ds:[tetrisPlaygroundStartY]
         test ch, 00000001b; pos 0 is up
-        jne @up_no_need_change
+        jne @up_no_need_change_0002
         inc ax
-@up_no_need_change:
+@up_no_need_change_0002:
         push ax
 
         ; end x
-        mov ax, ss:[bp + 2]
+        mov ax, si
         mov bx, ds:[tetrisPlaygroundUnitSize]
         mul bx
         add ax, ds:[tetrisPlaygroundStartX]
         add ax, ds:[tetrisPlaygroundUnitSize]
         test ch, 00001000b; pos 3 is right
-        jne @right_no_need_change
+        jne @right_no_need_change_0002
         dec ax
-@right_no_need_change:
+@right_no_need_change_0002:
         push ax
         
         ; end y
-        mov ax, ss:[bp + 4 + 2]
+        mov ax, di
         mov bx, ds:[tetrisPlaygroundUnitSize]
         mul bx
         add ax, ds:[tetrisPlaygroundStartY]
         add ax, ds:[tetrisPlaygroundUnitSize]
         test ch, 00000010b; pos 1 is down
-        jne @down_no_need_change
+        jne @down_no_need_change_0002
         dec ax
-@down_no_need_change:
+@down_no_need_change_0002:
         push ax
 
         push cx
         call DrawRect
 
-@finish1:
+        jmp @finish_this_unit_0002
+
+@finish_0002:
+        popf
+        popa
+
         ret
-RenderTetrisPlaygroundUnit ENDP
+
+RenderTetrisPlayground ENDP
 
 END main
