@@ -7,13 +7,16 @@ cd TARGET
 masm ..\SRC\GRAPHIC\SWITCH.ASM ,,,,
 if ERRORLEVEL 1 goto failed
 
-masm ..\SRC\MAIN.ASM ,,,, /cSWITCH.OBJ
+masm ..\SRC\GRAPHIC\UTILS.ASM ,,,,
 if ERRORLEVEL 1 goto failed
 
-@REM masm /c ..\SRC\GRAPHIC\SWITCH.ASM,,,,
-@REM if ERRORLEVEL 1 goto failed
+masm ..\SRC\GAME\PLAYGRND.ASM ,,,,
+if ERRORLEVEL 1 goto failed
 
-link MAIN.OBJ+SWITCH.OBJ,TETRIS.EXE,,, 
+masm ..\SRC\MAIN.ASM ,,,, /cSWITCH.OBJ,UTILS.OBJ,PLAYGRND.OBJ
+if ERRORLEVEL 1 goto failed
+
+link MAIN.OBJ+SWITCH.OBJ+UTILS.OBJ+PLAYGRND.OBJ,TETRIS.EXE,,, 
 if ERRORLEVEL 1 goto failed
 
 goto success
