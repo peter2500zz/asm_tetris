@@ -21,8 +21,9 @@
         ;       ||||||____ connect to left
         ;       |||||_____ connect to right
         ;       ||||______ is moving
-        ;       ||________ m flag
+        ;       |||_______ m flag
         tetrisPlayground dw 200 dup(0)
+        dw 10 dup(00FFh)
 
 .CODE
 
@@ -40,7 +41,7 @@ main PROC
         mul bx
         mov si, ax
         sub ax, ax
-        mov ah, 00000000b
+        mov ah, 00010000b
         mov al, 65
         mov ds:[tetrisPlayground + si], ax
 
@@ -73,9 +74,13 @@ main PROC
         ; push ax
         ; call DrawRect
 
+@tick:
         call RenderTetrisPlayground
 
         call ReadChar
+        call UpdateTetrisPlayground
+        cmp al, 116
+        je @tick
 
         call GraphicModeOff
 
@@ -319,7 +324,7 @@ RenderTetrisPlayground PROC
         mul bx
         add ax, ds:[tetrisPlaygroundStartX]
         test ch, 00000100b; pos 2 is left
-        jne @left_no_need_change_0002
+        jnz @left_no_need_change_0002
         inc ax
 @left_no_need_change_0002:
         push ax
@@ -330,7 +335,7 @@ RenderTetrisPlayground PROC
         mul bx
         add ax, ds:[tetrisPlaygroundStartY]
         test ch, 00000001b; pos 0 is up
-        jne @up_no_need_change_0002
+        jnz @up_no_need_change_0002
         inc ax
 @up_no_need_change_0002:
         push ax
@@ -342,7 +347,7 @@ RenderTetrisPlayground PROC
         add ax, ds:[tetrisPlaygroundStartX]
         add ax, ds:[tetrisPlaygroundUnitSize]
         test ch, 00001000b; pos 3 is right
-        jne @right_no_need_change_0002
+        jnz @right_no_need_change_0002
         dec ax
 @right_no_need_change_0002:
         push ax
@@ -354,7 +359,7 @@ RenderTetrisPlayground PROC
         add ax, ds:[tetrisPlaygroundStartY]
         add ax, ds:[tetrisPlaygroundUnitSize]
         test ch, 00000010b; pos 1 is down
-        jne @down_no_need_change_0002
+        jnz @down_no_need_change_0002
         dec ax
 @down_no_need_change_0002:
         push ax
@@ -371,5 +376,78 @@ RenderTetrisPlayground PROC
         ret
 
 RenderTetrisPlayground ENDP
+
+; update tetris playground
+; no args
+; no returns
+; tag: 0003
+UpdateTetrisPlayground PROC
+        pusha
+        pushf
+
+        mov cx, 20
+        sub bx, bx
+
+        mov cx, 200
+        sub si, si; column
+        sub di, di; row
+@update_0003:
+        push cx
+        push si
+        push di
+
+        sub cx, 2
+
+        mov ax, 2
+        mul cx
+        mov bp, ax
+        mov bx, ds:[tetrisPlayground + bp]; cx: current unit
+
+        test bh, 00010000b; this is moving
+        jnz @is_moving_0003
+        jmp @finish_this_unit_0003
+
+@is_moving_0003:
+        mov dx, ds:[tetrisPlayground + bp + 20]; dx: row+1 unit
+
+        cmp dx, 0; next is empty
+        je @move_to_next_0003
+        ; next it not empty
+
+        and bh, 11101111b
+        mov ds:[tetrisPlayground + bp], bx
+
+        jmp @finish_this_unit_0003
+
+@move_to_next_0003:
+        
+        mov ds:[tetrisPlayground + bp + 20], bx
+        sub ax, ax
+        mov ds:[tetrisPlayground + bp], ax
+
+@finish_this_unit_0003:
+        pop di
+        pop si
+        pop cx
+
+        inc si
+
+        cmp si, 10
+        jl @column_add_0003
+
+        inc di
+        sub si, si
+@column_add_0003:
+        loop @update_0003
+
+        jmp @finish_0003
+
+@finish_0003:
+        popf
+        popa
+
+        ret
+
+UpdateTetrisPlayground ENDP
 
 END main
