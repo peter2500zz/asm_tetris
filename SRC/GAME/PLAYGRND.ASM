@@ -3,24 +3,25 @@
 .MODEL small
 
 .DATA
-    tetrisPlaygroundStartX dw 120
-    tetrisPlaygroundStartY dw 20
-    tetrisPlaygroundUnitSize dw 7
-    ; tetrisPlayground unit
-    ; size: word
-    ; total: 10 x 20
-    ; low: color
-    ; high: 00000000b
-    ;       ||||||||__ connect to up
-    ;       |||||||___ connect to down
-    ;       ||||||____ connect to left
-    ;       |||||_____ connect to right
-    ;       ||||______ is moving
-    ;       |||_______ m flag
-    tetrisPlayground dw 200 dup(0)
-    dw 10 dup(00FFh)
+        tetrisPlaygroundStartX dw 120
+        tetrisPlaygroundStartY dw 20
+        tetrisPlaygroundUnitSize dw 7
+        ; tetrisPlayground unit
+        ; size: word
+        ; total: 10 x 20
+        ; low: color
+        ; high: 00000000b
+        ;       ||||||||__ connect to up
+        ;       |||||||___ connect to down
+        ;       ||||||____ connect to left
+        ;       |||||_____ connect to right
+        ;       ||||______ is moving
+        ;       |||_______ m flag
+        tetrisPlayground dw 200 dup(0)
+        dw 10 dup(00FFh)
 
 extrn FillRect:near
+extrn DrawRect:near
 public RenderTetrisPlayground
 public UpdateTetrisPlayground
 public PlayGroundInit
@@ -28,33 +29,59 @@ public PlayGroundInit
 .CODE
 
 PlayGroundInit PROC
-    ;         mov cx, 8
-    ;         sub bx, bx
-    ; @b:
-    ;         mov ax, 2
-    ;         mul bx
-    ;         mov si, ax
-    ;         sub ax, ax
-    ;         mov ah, 00010000b
-    ;         mov al, 65
-    ;         mov ds:[tetrisPlayground + si], ax
+        ;         mov cx, 8
+        ;         sub bx, bx
+        ; @b:
+        ;         mov ax, 2
+        ;         mul bx
+        ;         mov si, ax
+        ;         sub ax, ax
+        ;         mov ah, 00010000b
+        ;         mov al, 65
+        ;         mov ds:[tetrisPlayground + si], ax
 
-    ;         inc bx
-    ;         loop @b
-    mov ah, 00010000b
-    mov al, 101
-    mov ds:[tetrisPlayground + si + 8], ax
-    mov ah, 00010000b
-    mov al, 101
-    mov ds:[tetrisPlayground + si + 10], ax
-    mov ah, 00010000b
-    mov al, 101
-    mov ds:[tetrisPlayground + si + 12], ax
-    mov ah, 00010000b
-    mov al, 101
-    mov ds:[tetrisPlayground + si + 12 + 20], ax
+        ;         inc bx
+        ;         loop @b
+        mov ah, 00011000b
+        mov al, 101
+        mov ds:[tetrisPlayground + si + 8], ax
+        mov ah, 00011100b
+        mov al, 101
+        mov ds:[tetrisPlayground + si + 10], ax
+        mov ah, 00010110b
+        mov al, 101
+        mov ds:[tetrisPlayground + si + 12], ax
+        mov ah, 00010001b
+        mov al, 101
+        mov ds:[tetrisPlayground + si + 12 + 20], ax
 
-    ret
+        ;     mov ah, 00011000b
+        ;     mov al, 65
+        ;     mov ds:[tetrisPlayground + si + 4], ax
+        ;     mov ah, 00010110b
+        ;     mov al, 65
+        ;     mov ds:[tetrisPlayground + si + 6], ax
+        ;     mov ah, 00011001b
+        ;     mov al, 65
+        ;     mov ds:[tetrisPlayground + si + 6 + 20], ax
+        ;     mov ah, 00010100b
+        ;     mov al, 65
+        ;     mov ds:[tetrisPlayground + si + 8 + 20], ax
+
+        ;     mov ah, 00011000b
+        ;     mov al, 10
+        ;     mov ds:[tetrisPlayground + si + 8 + 40], ax
+        ;     mov ah, 00011101b
+        ;     mov al, 10
+        ;     mov ds:[tetrisPlayground + si + 10 + 40], ax
+        ;     mov ah, 00010100b
+        ;     mov al, 10
+        ;     mov ds:[tetrisPlayground + si + 12 + 40], ax
+        ;     mov ah, 00010010b
+        ;     mov al, 10
+        ;     mov ds:[tetrisPlayground + si + 10 + 20], ax
+
+        ret
 PlayGroundInit ENDP
 
 ; render tetris playground
@@ -65,9 +92,9 @@ RenderTetrisPlayground PROC
         pusha
         pushf
 
-        mov cx, 3; thickness
+        mov cx, 3; padding
 
-        ; outer board
+        ; board
         mov ax, ds:[tetrisPlaygroundStartX]  ; start x
         sub ax, cx
         push ax
@@ -87,40 +114,36 @@ RenderTetrisPlayground PROC
         mul bx
         add ax, ds:[tetrisPlaygroundStartY]
         add ax, cx
+        push ax
+
+        mov ax, 1; thickness
         push ax
 
         mov ax, 0Fh  ; color
         push ax
-        call FillRect
+        call DrawRect
 
-        dec cx
+        ; ; inner
+        ; mov ax, ds:[tetrisPlaygroundStartX]  ; start x
+        ; push ax
+        ; mov ax, ds:[tetrisPlaygroundStartY]  ; start y
+        ; push ax
 
-        ; inner board
-        mov ax, ds:[tetrisPlaygroundStartX]  ; start x
-        sub ax, cx
-        push ax
-        mov ax, ds:[tetrisPlaygroundStartY]  ; start y
-        sub ax, cx
-        push ax
+        ; mov bx, ds:[tetrisPlaygroundUnitSize]  ; end x
+        ; mov ax, 10
+        ; mul bx
+        ; add ax, ds:[tetrisPlaygroundStartX]
+        ; push ax
 
-        mov bx, ds:[tetrisPlaygroundUnitSize]  ; end x
-        mov ax, 10
-        mul bx
-        add ax, ds:[tetrisPlaygroundStartX]
-        add ax, cx
-        push ax
+        ; mov bx, ds:[tetrisPlaygroundUnitSize]  ; end y
+        ; mov ax, 20
+        ; mul bx
+        ; add ax, ds:[tetrisPlaygroundStartY]
+        ; push ax
 
-        mov bx, ds:[tetrisPlaygroundUnitSize]  ; end y
-        mov ax, 20
-        mul bx
-        add ax, ds:[tetrisPlaygroundStartY]
-        add ax, cx
-        push ax
-
-        mov ax, 0  ; color
-        push ax
-        call FillRect
-
+        ; mov ax, 0; color
+        ; push ax
+        ; call FillRect
 
         mov cx, 20
         sub bx, bx
@@ -156,7 +179,7 @@ RenderTetrisPlayground PROC
         jmp @finish_0002
 
 @RenderSingleUnit_0002:
-                ; because need word, di += count * 2
+        ; because need word, di += count * 2
         mov ax, 2
         mul bx
 
@@ -166,9 +189,9 @@ RenderTetrisPlayground PROC
         mov cx, ds:[di + tetrisPlayground]
         pop di
 
-        ; if is zero, ignore
+        ; if is zero, draw pure black unit
         test cx, cx
-        jz @finish_this_unit_0002
+        jz @draw_pure_black_unit
 
         ; get stack
         mov bp, sp
@@ -224,6 +247,44 @@ RenderTetrisPlayground PROC
         call FillRect
 
         jmp @finish_this_unit_0002
+@draw_pure_black_unit:
+        ; start x
+        mov ax, si
+        mov bx, ds:[tetrisPlaygroundUnitSize]
+        mul bx
+        add ax, ds:[tetrisPlaygroundStartX]
+        push ax
+
+        ; start y
+        mov ax, di
+        mov bx, ds:[tetrisPlaygroundUnitSize]
+        mul bx
+        add ax, ds:[tetrisPlaygroundStartY]
+        push ax
+
+        ; end x
+        mov ax, si
+        mov bx, ds:[tetrisPlaygroundUnitSize]
+        mul bx
+        add ax, ds:[tetrisPlaygroundStartX]
+        add ax, ds:[tetrisPlaygroundUnitSize]
+        push ax
+
+        ; end y
+        mov ax, di
+        mov bx, ds:[tetrisPlaygroundUnitSize]
+        mul bx
+        add ax, ds:[tetrisPlaygroundStartY]
+        add ax, ds:[tetrisPlaygroundUnitSize]
+        inc ax
+        push ax
+
+        mov ax, 0
+        push ax
+
+        call FillRect
+
+        jmp @finish_this_unit_0002
 
 @finish_0002:
         popf
@@ -240,9 +301,6 @@ RenderTetrisPlayground ENDP
 UpdateTetrisPlayground PROC
         pusha
         pushf
-
-        mov cx, 20
-        sub bx, bx
 
         mov cx, 200
         sub si, si; column
